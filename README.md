@@ -1,25 +1,33 @@
 # Lab7
 
-Turn in one copy for each group. If group members are not present in class they will be required to complete their own lab to receive credit. Please turn in **both a DOC or PDF file and your R Markdown script**. 
 
-## Lab Overview
+For this document, turn in your R Markdown document that embeds Shiny. Note this will not generate a static html output file.
 
-This lab will use a subset of the Seattle Police 911 calls data set [http://math.montana.edu/ahoegh/teaching/stat408/datasets/Seattle_911_062016.csv](http://math.montana.edu/ahoegh/teaching/stat408/datasets/Seattle_911_062016.csv). 
 
+### 1.  Read Covid19 Data (4 points)
+
+First read in the data and convert from wide to long.
 ```
-library(readr)
-seattle <- read_csv('http://math.montana.edu/ahoegh/teaching/stat408/datasets/Seattle_911_062016.csv')
+library(tidyverse)
+library(shiny)
+library(DT)
+covid_cases <- read_csv("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv") 
 ```
 
 
-## Data Wrangling
+### 2. Create an Interactive Table (4 points)
 
-### Q1. (5 points)
-Summarize the number of crimes cleared during each hour of the day (using the `Event.Clearance.Date`).
+Allow users to select the date to display in the table. Note the `DT::renderDataTable` might be useful (this is the `renderDataTable` function in the `DT` package).
 
-### Q2. (5 points)
-How many crimes in the dataset are reported as `ROAD RAGE` (using the `Initial.Type.Description`).
 
-## Data Visualization (10 points)
 
-Create a figure telling a story from this dataset. Make sure to include appropriate axes, titles, and include an annotation.
+
+
+## 3. Interactive Figure (6 points)
+
+Read in a US level covid dataset and convert this to a long dataframe.
+```
+US_data <- read_csv("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_US.csv") 
+```
+
+Create an interactive figure of your choice. You can consider filtering by state / province to show curves, include colors and/or faceting based on selected variables, or something else of your choosing.
