@@ -1,0 +1,77 @@
+---
+title: "Lab 6"
+output: html_document
+runtime: shiny
+---
+
+
+For this document, turn in your R Markdown document that embeds Shiny. Note this will not generate a static html output file.
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = F)
+```
+
+### 1.  Read Covid19 Data (4 points)
+
+First read in the data and convert from wide to long.
+```{r, message = F, echo = T, warning = F}
+library(tidyverse)
+library(shiny)
+library(DT)
+covid_cases <- read_csv("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv") %>% select(-Lat, -Long) %>% rename(state = `Province/State`, country = `Country/Region` )
+
+covid_cases_long <- covid_cases %>% pivot_longer(-c(country,state), names_to = "date", values_to = "count" )
+```
+
+
+### 2. Create an Interactive Table (4 points)
+
+Allow users to select the date and number of countries to display in the table. Note the `DT::renderDataTable` might be useful (this is the `renderDataTable` function in the `DT` package).
+
+
+```{r covidtable, echo=FALSE}
+inputPanel(
+  selectInput("date", label = "Select a Date!:",
+              choices = unique(covid_cases_long$date), selected = '4/2/20'))
+
+DT::renderDataTable(
+  covid_cases_long %>% 
+    group_by(country) %>% 
+    filter(date == input$date) %>% group_by(country, date) %>% summarize(`total cases` = sum(count)) %>% arrange(desc(`total cases`)) 
+)
+```
+
+
+## 3. Interactive Figure (6 points)
+
+Read in a US level covid dataset and convert this to a long dataframe.
+```{r, eval = T, message = F}
+library(lubridate)
+US_data <- read_csv("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_US.csv") %>% select(-c(UID, iso2, iso3, FIPS,Lat,Long_, code3, Country_Region, Combined_Key))
+
+US_long <- US_data %>% pivot_longer(-c(Admin2,Province_State), names_to = "date", values_to = "count" )
+```
+
+Create an interactive figure of your choice. You can consider filtering by state / province to show curves, include colors and/or faceting based on selected variables, or something else of your choosing?
+
+
+```{r, eval = T, message = F}
+library(lubridate)
+US_data <- read_csv("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_US.csv") %>% select(-c(UID, iso2, iso3, FIPS,Lat,Long_, code3, Country_Region, Combined_Key))
+
+US_long <- US_data %>% pivot_longer(-c(Admin2,Province_State), names_to = "date", values_to = "count" )
+
+
+```
+
+```{r, echo=FALSE,eval =T}
+inputPanel(
+  selectInput("state", label = "State:",
+              choices = unique(US_long$Province_State), selected = 'Montana')
+)
+
+renderPlot({
+  US_long %>% dplyr::filter(Province_State == input$state) %>%  dplyr::mutate(date = mdy(date)) %>% dplyr::group_by(date) %>% dplyr::summarize(count = sum(count)) %>% ggplot2::ggplot(aes(y = count, x = date)) + ggplot2::geom_line() + theme_bw() + ggtitle(paste('Total Diagnosed Covid19 cases in ', input$state ))
+
+})
+```
+
