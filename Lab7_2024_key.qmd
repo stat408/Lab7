@@ -1,0 +1,182 @@
+---
+title: "Lab 7"
+format: html
+server: shiny
+---
+
+## Lab Overview
+
+This lab will use the Canadian cheese dataset to explore features of Shiny. 
+
+Learn more about Shiny interactive documents at [https://shiny.posit.co](https://shiny.posit.co) and <https://quarto.org/docs/interactive/shiny/>.
+
+### Question 1 (5 points)
+
+Update the default Shiny app to use the cheese dataset to create a histogram using the moisture percentage of the cheeses. Replace the histogram with a ggplot version and input number of bins directly in `geom_histogram()`. Note that you'll need to import data & load libraries within the server code.
+
+
+```{r}
+sliderInput("bins", "Number of bins:", 
+            min = 1, max = 50, value = 30)
+plotOutput("distPlot")
+```
+
+```{r}
+#| context: server
+output$distPlot <- renderPlot({
+  library(tidyverse)
+  cheese <- read_csv('https://raw.githubusercontent.com/stat408/Data/refs/heads/main/cheese_data.csv') |>
+    filter(!is.na(MoisturePercent))
+  
+   x <- faithful[, 2]  # Old Faithful Geyser data
+   bins <- seq(min(x), max(x), length.out = input$bins + 1)
+   hist(x, breaks = bins, col = 'darkgray', border = 'white',
+        xlab = 'Waiting time to next eruption (in mins)',
+        main = 'Histogram of waiting times')
+})
+```
+
+
+## Solution
+
+```{r}
+sliderInput("bins1b", "Number of bins:", 
+            min = 1, max = 50, value = 30)
+plotOutput("distPlot1b")
+```
+
+```{r}
+#| context: server
+output$distPlot1b <- renderPlot({
+  library(tidyverse)
+
+  cheese <- read_csv('https://raw.githubusercontent.com/stat408/Data/refs/heads/main/cheese_data.csv') |>
+    filter(!is.na(MoisturePercent))
+  
+  cheese |>
+    ggplot(aes(x = MoisturePercent)) +
+    geom_histogram(bins = input$bins1b, fill = 'goldenrod') +
+    xlab("Moisture Percent of Canadian Cheese") +
+    theme_dark()
+
+})
+```
+
+---
+
+### Question 2 (5 points)
+
+Explore the control widgets available in shiny [https://shiny.posit.co/r/getstarted/shiny-basics/lesson3/](https://shiny.posit.co/r/getstarted/shiny-basics/lesson3/) and add another widget to your output from the first question.
+
+
+```{r}
+sliderInput("bins", "Number of bins:", 
+            min = 1, max = 50, value = 30)
+radioButtons("fill_color", "Histogram Color:",
+               c("goldenrod" = "goldenrod",
+                 "turquoise" = "turquoise",
+                 "lavender" = "lavender"))
+plotOutput("distPlot2")
+```
+
+```{r}
+#| context: server
+output$distPlot2 <- renderPlot({
+  library(tidyverse)
+
+  cheese <- read_csv('https://raw.githubusercontent.com/stat408/Data/refs/heads/main/cheese_data.csv') |>
+    filter(!is.na(MoisturePercent))
+  
+  cheese |>
+    ggplot(aes(x = MoisturePercent)) +
+    geom_histogram(bins = input$bins, fill = input$fill_color) +
+    xlab("Moisture Percent of Canadian Cheese") +
+    theme_dark()
+})
+```
+
+---
+
+### Question 3 (5 points)
+
+Explore the reactive output options in Shiny [https://shiny.posit.co/r/getstarted/shiny-basics/lesson4/](https://shiny.posit.co/r/getstarted/shiny-basics/lesson4/) and add another output
+
+```{r}
+sliderInput("bins", "Number of bins:", 
+            min = 1, max = 50, value = 30)
+radioButtons("fill_color2", "Histogram Color:",
+               c("goldenrod" = "goldenrod",
+                 "turquoise" = "turquoise",
+                 "lavender" = "lavender"))
+plotOutput("distPlot3")
+textOutput("text")
+
+```
+
+```{r}
+#| context: server
+output$distPlot3 <- renderPlot({
+  library(tidyverse)
+
+  cheese <- read_csv('https://raw.githubusercontent.com/stat408/Data/refs/heads/main/cheese_data.csv') |>
+    filter(!is.na(MoisturePercent))
+  
+  cheese |>
+    ggplot(aes(x = MoisturePercent)) +
+    geom_histogram(bins = input$bins, fill = input$fill_color2) +
+    xlab("Moisture Percent of Canadian Cheese") +
+    theme_dark()
+})
+
+output$text <- renderText({ paste('You have selected', input$fill_color2, 'as the fill color in the histogram.', sep = ' ') })
+```
+
+---
+
+### Question 4 (5 points)
+
+Create a new reactive figure that allows the user to create side-by-side violin plots of `MoisturePercent` by a selected variable. Hint: use `varSelectInput` and see the reference on the main shiny page <https://shiny.posit.co>.
+
+---
+
+```{r q4, message = F}
+library(tidyverse)
+cheese <- read_csv('https://raw.githubusercontent.com/stat408/Data/refs/heads/main/cheese_data.csv') 
+
+varSelectInput("xvar", "Choose a grouping variable:", cheese |>
+                 select(ManufacturerProvCode,
+                        ManufacturingTypeEn,
+                        CategoryTypeEn,
+                        MilkTypeEn,
+                        MilkTreatmentTypeEn,
+                        RindTypeEn,
+                        FatLevel),
+               selected = "ManufacturingTypeEn")
+plotOutput("violin")
+
+textOutput("text2")
+
+```
+
+
+
+```{r}
+#| context: server
+output$violin <- renderPlot({
+  library(tidyverse)
+  library(viridis)
+
+ cheese <- read_csv('https://raw.githubusercontent.com/stat408/Data/refs/heads/main/cheese_data.csv') |>
+  filter(!is.na(MoisturePercent))
+library(viridis)
+cheese |>
+  ggplot(aes(y = MoisturePercent, x = !!input$xvar, color = !!input$xvar)) +
+  theme_bw() +
+  scale_color_viridis( discrete =T) +
+  geom_violin() +
+  geom_jitter() + 
+  theme(legend.position = 'none')
+})
+
+output$text2 <- renderText({ paste('You have selected', input$xvar, 'as the fill color in the histogram.', sep = ' ') })
+```
